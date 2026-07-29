@@ -25,12 +25,16 @@ gameServer.define("game_room", GameRoom);
 // REST endpoint to find a room by its 4-digit code
 app.get("/find-room/:code", async (req, res) => {
   const code = req.params.code.toUpperCase();
+  console.log(`[GET /find-room/${code}] Request received`);
   try {
     const rooms = await matchMaker.query({ name: "game_room" });
+    console.log(`[GET /find-room/${code}] Active rooms:`, rooms.map(r => ({ id: r.roomId, metadata: r.metadata })));
     const found = rooms.find((r: any) => r.metadata?.roomCode === code && r.clients < r.maxClients);
     if (found) {
+      console.log(`[GET /find-room/${code}] Found match:`, found.roomId);
       res.json({ roomId: found.roomId });
     } else {
+      console.log(`[GET /find-room/${code}] No match found`);
       res.status(404).json({ error: "Room not found or full" });
     }
   } catch (e) {

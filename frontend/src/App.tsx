@@ -4,6 +4,7 @@ import { Maximize } from 'lucide-react';
 import { LoadingScreen } from './components/LoadingScreen';
 import { OrientationLock } from './components/OrientationLock';
 import { MainMenu } from './components/MainMenu';
+import { PhaserGame } from './game/PhaserGame';
 import { Room } from 'colyseus.js';
 import './index.css';
 
@@ -52,10 +53,10 @@ function App() {
         {appState === 'menu' && (
           <MainMenu key="menu" onJoinRoom={handleJoinRoom} />
         )}
-        {appState === 'game' && (
-          <div key="game" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'white' }}>
-            <h1>Game Scene connected to room {room?.roomId}</h1>
-          </div>
+        {appState === 'game' && room && (
+          <motion.div key="game" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ width: '100%', height: '100%' }}>
+            <PhaserGame room={room} />
+          </motion.div>
         )}
       </AnimatePresence>
 
