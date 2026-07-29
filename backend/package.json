@@ -14,6 +14,7 @@
   "type": "commonjs",
   "dependencies": {
     "@colyseus/monitor": "^0.17.8",
+    "@colyseus/ws-transport": "^0.17.13",
     "colyseus": "^0.17.10",
     "cors": "^2.8.6",
     "express": "^5.2.1"

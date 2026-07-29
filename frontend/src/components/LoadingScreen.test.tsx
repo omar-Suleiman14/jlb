@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { LoadingScreen } from './LoadingScreen';
 import { vi } from 'vitest';
 

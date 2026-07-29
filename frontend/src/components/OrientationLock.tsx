@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Smartphone, Play } from 'lucide-react';
 
 export const OrientationLock: React.FC<{ onUnlock: () => void }> = ({ onUnlock }) => {
-  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const handlePlay = async () => {
     try {
@@ -16,7 +15,6 @@ export const OrientationLock: React.FC<{ onUnlock: () => void }> = ({ onUnlock }
           console.warn("Orientation lock not supported on this device/browser");
         });
       }
-      setIsFullscreen(true);
       onUnlock();
     } catch (e) {
       console.error(e);

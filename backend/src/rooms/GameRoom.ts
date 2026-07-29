@@ -1,7 +1,7 @@
 import { Room, Client } from "colyseus";
 import { GameState, Player } from "./schema/GameState";
 
-export class GameRoom extends Room<GameState> {
+export class GameRoom extends Room<{ state: GameState }> {
   maxClients = 2;
 
   onCreate(options: any) {
@@ -24,7 +24,7 @@ export class GameRoom extends Room<GameState> {
     this.state.players.set(client.sessionId, player);
   }
 
-  onLeave(client: Client, consented: boolean) {
+  onLeave(client: Client, code?: number) {
     console.log(client.sessionId, "left!");
     this.state.players.delete(client.sessionId);
   }
