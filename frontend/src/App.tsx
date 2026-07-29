@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Maximize } from 'lucide-react';
 import { LoadingScreen } from './components/LoadingScreen';
 import { OrientationLock } from './components/OrientationLock';
 import { MainMenu } from './components/MainMenu';
@@ -11,6 +12,28 @@ type AppState = 'loading' | 'orientation' | 'menu' | 'game';
 function App() {
   const [appState, setAppState] = useState<AppState>('loading');
   const [room, setRoom] = useState<Room | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(true);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const handleReturnFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      }
+      if ('orientation' in screen && 'lock' in screen.orientation) {
+        await (screen.orientation as any).lock('landscape').catch(() => {});
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const handleJoinRoom = (joinedRoom: Room) => {
     setRoom(joinedRoom);
@@ -31,8 +54,39 @@ function App() {
         )}
         {appState === 'game' && (
           <div key="game" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'white' }}>
-            <h1>Game Scene connected to room {room?.id}</h1>
+            <h1>Game Scene connected to room {room?.roomId}</h1>
           </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {!isFullscreen && (appState === 'menu' || appState === 'game') && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              top: 0, left: 0, right: 0, bottom: 0,
+              background: 'rgba(0,0,0,0.6)',
+              backdropFilter: 'blur(15px)',
+              WebkitBackdropFilter: 'blur(15px)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9999
+            }}
+          >
+            <div className="glass-panel" style={{ padding: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: '400px', textAlign: 'center' }}>
+              <Maximize size={48} style={{ marginBottom: 16, opacity: 0.8 }} color="white" />
+              <h2 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '16px', color: 'white' }}>Fullscreen Required</h2>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>Please return to fullscreen to continue playing.</p>
+              <button className="apple-btn primary" onClick={handleReturnFullscreen}>
+                Return to Game
+              </button>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </>

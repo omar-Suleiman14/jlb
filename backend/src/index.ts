@@ -1,7 +1,7 @@
 import http from "http";
 import express from "express";
 import cors from "cors";
-import { Server } from "colyseus";
+import { Server, matchMaker } from "colyseus";
 import { WebSocketTransport } from "@colyseus/ws-transport";
 import { monitor } from "@colyseus/monitor";
 import { GameRoom } from "./rooms/GameRoom";
@@ -21,6 +21,23 @@ const gameServer = new Server({
 
 // Register GameRoom
 gameServer.define("game_room", GameRoom);
+
+// REST endpoint to find a room by its 4-digit code
+app.get("/find-room/:code", async (req, res) => {
+  const code = req.params.code.toUpperCase();
+  try {
+    const rooms = await matchMaker.query({ name: "game_room" });
+    const found = rooms.find((r: any) => r.metadata?.roomCode === code && r.clients < r.maxClients);
+    if (found) {
+      res.json({ roomId: found.roomId });
+    } else {
+      res.status(404).json({ error: "Room not found or full" });
+    }
+  } catch (e) {
+    console.error("find-room error:", e);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 // Register colyseus monitor
 app.use("/colyseus", monitor());

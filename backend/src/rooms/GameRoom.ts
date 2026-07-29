@@ -1,20 +1,11 @@
 import { Room, Client } from "colyseus";
 import { GameState, Player } from "./schema/GameState";
 
-const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-function generateCode(): string {
-    let result = "";
-    for (let i = 0; i < 4; i++) {
-        result += LETTERS.charAt(Math.floor(Math.random() * LETTERS.length));
-    }
-    return result;
-}
-
-export class GameRoom extends Room<{ state: GameState }> {
+export class GameRoom extends Room<GameState> {
   maxClients = 2;
 
   onCreate(options: any) {
-    this.roomId = generateCode();
+    this.setMetadata({ roomCode: options.roomCode });
     this.setState(new GameState());
     
     this.onMessage("move", (client, data) => {
@@ -34,7 +25,7 @@ export class GameRoom extends Room<{ state: GameState }> {
     this.state.players.set(client.sessionId, player);
   }
 
-  onLeave(client: Client, code?: number) {
+  onLeave(client: Client, consented?: boolean) {
     console.log(client.sessionId, "left!");
     this.state.players.delete(client.sessionId);
   }

@@ -5,27 +5,36 @@ import { Client, Room } from 'colyseus.js';
 
 const client = new Client(import.meta.env.VITE_BACKEND_URL || "ws://localhost:2567");
 
+const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+function generateCode(): string {
+    let result = "";
+    for (let i = 0; i < 4; i++) {
+        result += LETTERS.charAt(Math.floor(Math.random() * LETTERS.length));
+    }
+    return result;
+}
+
 export const MainMenu: React.FC<{ onJoinRoom: (room: Room) => void }> = ({ onJoinRoom }) => {
   const [view, setView] = useState<'main' | 'host' | 'join'>('main');
   const [roomCode, setRoomCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [hostedRoom, setHostedRoom] = useState<Room | null>(null);
+  const [hostedCode, setHostedCode] = useState('');
 
   // Auto-reconnect logic
   useEffect(() => {
-    const lastRoom = localStorage.getItem('jlb-last-room');
-    const lastSession = localStorage.getItem('jlb-session-id');
+    const lastSession = localStorage.getItem('jlb-reconnection-token');
     
-    if (lastRoom && lastSession) {
+    if (lastSession) {
       setLoading(true);
-      client.reconnect(lastRoom, lastSession)
+      client.reconnect(lastSession)
         .then(room => {
           onJoinRoom(room);
         })
         .catch(() => {
           localStorage.removeItem('jlb-last-room');
-          localStorage.removeItem('jlb-session-id');
+          localStorage.removeItem('jlb-reconnection-token');
           setLoading(false);
         });
     }
@@ -35,10 +44,11 @@ export const MainMenu: React.FC<{ onJoinRoom: (room: Room) => void }> = ({ onJoi
     setLoading(true);
     setError('');
     try {
-      const room = await client.create('game_room');
+      const code = generateCode();
+      const room = await client.create('game_room', { roomCode: code });
       setHostedRoom(room);
-      localStorage.setItem('jlb-last-room', room.id);
-      localStorage.setItem('jlb-session-id', room.sessionId);
+      setHostedCode(code);
+      localStorage.setItem('jlb-reconnection-token', room.reconnectionToken);
       
       // We don't join immediately; we wait in a lobby for P2
       setView('host');
@@ -65,12 +75,18 @@ export const MainMenu: React.FC<{ onJoinRoom: (room: Room) => void }> = ({ onJoi
     setLoading(true);
     setError('');
     try {
-      const room = await client.joinById(roomCode.toUpperCase());
-      localStorage.setItem('jlb-last-room', room.id);
-      localStorage.setItem('jlb-session-id', room.sessionId);
+      // Look up the room's internal ID via our REST endpoint
+      const backendHttp = (import.meta.env.VITE_BACKEND_URL || "ws://localhost:2567").replace("ws://", "http://").replace("wss://", "https://");
+      const res = await fetch(`${backendHttp}/find-room/${roomCode.toUpperCase()}`);
+      if (!res.ok) {
+        throw new Error('Room not found or full');
+      }
+      const { roomId } = await res.json();
+      const room = await client.joinById(roomId);
+      localStorage.setItem('jlb-reconnection-token', room.reconnectionToken);
       onJoinRoom(room);
     } catch (e: any) {
-      setError('Room not found or full');
+      setError(e.message || 'Room not found or full');
     }
     setLoading(false);
   };
@@ -101,7 +117,7 @@ export const MainMenu: React.FC<{ onJoinRoom: (room: Room) => void }> = ({ onJoi
             <h2 style={{ fontSize: 24, fontWeight: 600 }}>Lobby</h2>
             <p style={{ color: 'var(--text-secondary)' }}>Share this code with your partner:</p>
             <div style={{ background: 'rgba(0,0,0,0.5)', padding: '16px 32px', borderRadius: 16, fontSize: 48, fontWeight: 800, letterSpacing: 8, color: 'var(--accent-color)' }}>
-              {hostedRoom?.id}
+              {hostedCode}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 16 }}>
               <Users size={24} color="var(--text-secondary)" />
@@ -126,18 +142,18 @@ export const MainMenu: React.FC<{ onJoinRoom: (room: Room) => void }> = ({ onJoi
               maxLength={4}
               value={roomCode}
               onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-              placeholder="Enter 4-digit code"
+              placeholder="Code"
               style={{
                 width: '100%',
                 background: 'rgba(255,255,255,0.1)',
                 border: '1px solid rgba(255,255,255,0.2)',
                 borderRadius: 16,
                 padding: '16px',
-                fontSize: 24,
+                fontSize: 20,
                 textAlign: 'center',
                 color: 'white',
                 outline: 'none',
-                letterSpacing: 8
+                letterSpacing: 4
               }}
             />
             {error && <p style={{ color: 'var(--danger)', fontSize: 14 }}>{error}</p>}
