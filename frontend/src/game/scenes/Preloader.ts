@@ -12,22 +12,8 @@ export class Preloader extends Scene {
   }
 
   preload() {
-    // We don't have image assets yet, so we'll just generate textures dynamically
-    // for Jim and Mary using Phaser Graphics
-    
-    // Create Jim texture (blue square)
-    const jimGraphics = this.add.graphics();
-    jimGraphics.fillStyle(0x3498db, 1);
-    jimGraphics.fillRect(0, 0, 32, 32);
-    jimGraphics.generateTexture('jim', 32, 32);
-    jimGraphics.destroy();
-
-    // Create Mary texture (pink circle)
-    const maryGraphics = this.add.graphics();
-    maryGraphics.fillStyle(0xe74c3c, 1);
-    maryGraphics.fillCircle(16, 16, 16);
-    maryGraphics.generateTexture('mary', 32, 32);
-    maryGraphics.destroy();
+    this.load.spritesheet('jim', 'assets/jim.png', { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('mary', 'assets/mary.png', { frameWidth: 64, frameHeight: 64 });
 
     // Create Platform texture (gray rectangle)
     const platformGraphics = this.add.graphics();

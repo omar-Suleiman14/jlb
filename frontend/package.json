@@ -11,8 +11,11 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "canvas": "^3.2.3",
     "colyseus.js": "^0.16.22",
     "framer-motion": "^12.43.0",
+    "image-size": "^2.0.2",
+    "jimp": "^1.6.1",
     "lucide-react": "^1.27.0",
     "phaser": "^4.2.1",
     "react": "^19.2.7",
