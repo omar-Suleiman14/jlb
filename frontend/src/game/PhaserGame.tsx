@@ -43,12 +43,17 @@ export const PhaserGame: React.FC<PhaserGameProps> = ({ room }) => {
     const game = new Phaser.Game(config);
     gameRef.current = game;
 
-    // Start the Preloader with the Colyseus room
-    game.events.on('ready', () => {
-      game.scene.start('Preloader', { room });
-    });
+    // Start Preloader immediately — 'ready' event can fire before the closure
+    // captures the room reference, so we use a short timeout to ensure the
+    // game boot cycle completes first.
+    const startTimer = setTimeout(() => {
+      if (gameRef.current) {
+        game.scene.start('Preloader', { room });
+      }
+    }, 100);
 
     return () => {
+      clearTimeout(startTimer);
       if (gameRef.current) {
         gameRef.current.destroy(true);
         gameRef.current = null;

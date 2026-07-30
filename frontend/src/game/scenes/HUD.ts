@@ -5,9 +5,7 @@ export class HUD extends Scene {
   private heartImages: Phaser.GameObjects.Image[] = [];
   private maxHearts = 3;
   private levelText!: Phaser.GameObjects.Text;
-  private pauseBtn!: Phaser.GameObjects.Text;
-  private retryBtn!: Phaser.GameObjects.Text;
-  private menuBtn!: Phaser.GameObjects.Text;
+
   private room: any;
   private levelKey: string = 'Level1';
 
@@ -45,11 +43,11 @@ export class HUD extends Scene {
     }).setOrigin(0.5);
 
     // ── Top-right buttons ──────────────────────────────────────────────────
-    this.menuBtn = this.createIconBtn(width - 150, 30, '☰', 'Pause', () => {
+    this.createIconBtn(width - 150, 30, '☰', 'Pause', () => {
       this.scene.pause(this.levelKey);
       this.scene.launch('PauseMenu', { room: this.room, levelKey: this.levelKey });
     });
-    this.retryBtn = this.createIconBtn(width - 105, 30, '↩', 'Retry', () => {
+    this.createIconBtn(width - 105, 30, '↩', 'Retry', () => {
       this.scene.stop('HUD');
       this.scene.stop(this.levelKey);
       this.scene.start(this.levelKey, { room: this.room });

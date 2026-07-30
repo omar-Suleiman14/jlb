@@ -17,6 +17,14 @@ export class GameRoom extends Room<GameState> {
         player.flipX = data.flipX;
       }
     });
+
+    // Host (first player = jim) sends this; server broadcasts countdown to all
+    this.onMessage("start_game", (client, _data) => {
+      const player = this.state.players.get(client.sessionId);
+      if (player?.character === "jim") { // only host can trigger
+        this.broadcast("game_starting", { countdown: 3 });
+      }
+    });
   }
 
   onJoin(client: Client, options: any) {

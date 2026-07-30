@@ -1,4 +1,4 @@
-import { Scene } from 'phaser';
+import Phaser, { Scene } from 'phaser';
 
 export class LevelComplete extends Scene {
   private room: any;
