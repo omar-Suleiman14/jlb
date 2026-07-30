@@ -2,7 +2,12 @@ import React, { useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import { Room } from 'colyseus.js';
 import { Preloader } from './scenes/Preloader';
-import { MainGame } from './scenes/MainGame';
+import { GameMenu } from './scenes/GameMenu';
+import { Level1 } from './scenes/Level1';
+import { HUD } from './scenes/HUD';
+import { PauseMenu } from './scenes/PauseMenu';
+import { LevelComplete } from './scenes/LevelComplete';
+import { GameOver } from './scenes/GameOver';
 
 interface PhaserGameProps {
   room: Room;
@@ -16,9 +21,10 @@ export const PhaserGame: React.FC<PhaserGameProps> = ({ room }) => {
 
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
-      width: 800,
+      width: 1024,
       height: 600,
       parent: 'phaser-container',
+      backgroundColor: '#87ceeb',
       physics: {
         default: 'arcade',
         arcade: {
@@ -26,7 +32,8 @@ export const PhaserGame: React.FC<PhaserGameProps> = ({ room }) => {
           debug: false
         }
       },
-      scene: [Preloader, MainGame],
+      // All scenes registered — Preloader runs first, then routes to GameMenu
+      scene: [Preloader, GameMenu, Level1, HUD, PauseMenu, LevelComplete, GameOver],
       scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
@@ -36,9 +43,9 @@ export const PhaserGame: React.FC<PhaserGameProps> = ({ room }) => {
     const game = new Phaser.Game(config);
     gameRef.current = game;
 
+    // Start the Preloader with the Colyseus room
     game.events.on('ready', () => {
-       game.scene.stop('Preloader');
-       game.scene.start('Preloader', { room });
+      game.scene.start('Preloader', { room });
     });
 
     return () => {
