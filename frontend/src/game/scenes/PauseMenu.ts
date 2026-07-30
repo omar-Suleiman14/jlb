@@ -9,7 +9,7 @@ export class PauseMenu extends Scene {
   }
 
   init(data: any) {
-    this.room = data.room;
+    this.room = data.room || this.registry.get('colyseus_room');
     this.levelKey = data.levelKey ?? 'Level1';
   }
 

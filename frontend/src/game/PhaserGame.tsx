@@ -21,10 +21,10 @@ export const PhaserGame: React.FC<PhaserGameProps> = ({ room }) => {
 
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
-      width: 1024,
-      height: 600,
+      width: 1152,
+      height: 576,
       parent: 'phaser-container',
-      backgroundColor: '#87ceeb',
+      backgroundColor: '#0a0a1a',
       physics: {
         default: 'arcade',
         arcade: {
@@ -43,17 +43,13 @@ export const PhaserGame: React.FC<PhaserGameProps> = ({ room }) => {
     const game = new Phaser.Game(config);
     gameRef.current = game;
 
-    // Start Preloader immediately — 'ready' event can fire before the closure
-    // captures the room reference, so we use a short timeout to ensure the
-    // game boot cycle completes first.
-    const startTimer = setTimeout(() => {
-      if (gameRef.current) {
-        game.scene.start('Preloader', { room });
-      }
-    }, 100);
+    // Store room in the game registry so every scene can access it immediately,
+    // regardless of when they start. The old setTimeout approach was racy —
+    // Preloader auto-starts as the first scene and finishes before 100ms
+    // when assets are already cached, causing room to be undefined.
+    game.registry.set('colyseus_room', room);
 
     return () => {
-      clearTimeout(startTimer);
       if (gameRef.current) {
         gameRef.current.destroy(true);
         gameRef.current = null;

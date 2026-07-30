@@ -142,7 +142,13 @@ export const MainMenu: React.FC<{ onJoinRoom: (room: Room) => void }> = ({ onJoi
               maxLength={4}
               value={roomCode}
               onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && roomCode.length === 4) {
+                  handleJoin();
+                }
+              }}
               placeholder="Code"
+              autoFocus
               style={{
                 width: '100%',
                 background: 'rgba(255,255,255,0.1)',

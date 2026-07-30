@@ -2,25 +2,21 @@ import { Scene } from 'phaser';
 
 // HUD runs as a parallel scene overlaid on top of Level1
 export class HUD extends Scene {
-  private heartImages: Phaser.GameObjects.Image[] = [];
+  private heartIcons: Phaser.GameObjects.Image[] = [];
   private maxHearts = 3;
   private levelText!: Phaser.GameObjects.Text;
 
-  private room: any;
-  private levelKey: string = 'Level1';
+
 
   constructor() {
     super({ key: 'HUD', active: false });
   }
-
   init(data: any) {
-    this.room = data.room;
-    this.levelKey = data.levelKey ?? 'Level1';
     this.maxHearts = data.maxHearts ?? 3;
   }
 
   create() {
-    const { width } = this.scale;
+    const { width, height } = this.scale;
 
     // ── Hearts (top-left) ──────────────────────────────────────────────────
     const panelBg = this.add.graphics();
@@ -28,8 +24,10 @@ export class HUD extends Scene {
     panelBg.fillRoundedRect(8, 8, this.maxHearts * 38 + 12, 44, 10);
 
     for (let i = 0; i < this.maxHearts; i++) {
-      const img = this.add.image(26 + i * 38, 30, 'heart-full').setScale(0.9);
-      this.heartImages.push(img);
+      const img = this.add.image(26 + i * 38, 30, 'tile_44').setScale(2).setOrigin(0.5);
+      img.setScrollFactor(0);
+      img.setAlpha(0.3); // Start empty
+      this.heartIcons.push(img);
     }
 
     // ── Level title (center) ───────────────────────────────────────────────
@@ -42,23 +40,41 @@ export class HUD extends Scene {
       strokeThickness: 5
     }).setOrigin(0.5);
 
-    // ── Top-right buttons ──────────────────────────────────────────────────
-    this.createIconBtn(width - 150, 30, '☰', 'Pause', () => {
-      this.scene.pause(this.levelKey);
-      this.scene.launch('PauseMenu', { room: this.room, levelKey: this.levelKey });
-    });
-    this.createIconBtn(width - 105, 30, '↩', 'Retry', () => {
-      this.scene.stop('HUD');
-      this.scene.stop(this.levelKey);
-      this.scene.start(this.levelKey, { room: this.room });
-    });
-    this.createIconBtn(width - 60, 30, '🔊', 'Sound', () => {});
-    this.createIconBtn(width - 15, 30, '🎵', 'Music', () => {});
+    // ── Mobile Controls ────────────────────────────────────────────────────
+    const leftBtn = this.add.circle(60, height - 60, 40, 0xffffff, 0.3).setInteractive();
+    this.add.text(60, height - 60, '◀', { fontSize: '32px' }).setOrigin(0.5);
+    
+    const rightBtn = this.add.circle(160, height - 60, 40, 0xffffff, 0.3).setInteractive();
+    this.add.text(160, height - 60, '▶', { fontSize: '32px' }).setOrigin(0.5);
+
+    const jumpBtn = this.add.circle(width - 80, height - 60, 40, 0xffffff, 0.3).setInteractive();
+    this.add.text(width - 80, height - 60, '▲', { fontSize: '32px' }).setOrigin(0.5);
+
+    const duckBtn = this.add.circle(width - 180, height - 60, 40, 0xffffff, 0.3).setInteractive();
+    this.add.text(width - 180, height - 60, '▼', { fontSize: '32px' }).setOrigin(0.5);
+
+    const setInput = (key: string, isDown: boolean) => this.registry.set(`input_${key}`, isDown);
+
+    leftBtn.on('pointerdown', () => setInput('left', true));
+    leftBtn.on('pointerup', () => setInput('left', false));
+    leftBtn.on('pointerout', () => setInput('left', false));
+
+    rightBtn.on('pointerdown', () => setInput('right', true));
+    rightBtn.on('pointerup', () => setInput('right', false));
+    rightBtn.on('pointerout', () => setInput('right', false));
+
+    jumpBtn.on('pointerdown', () => setInput('jump', true));
+    jumpBtn.on('pointerup', () => setInput('jump', false));
+    jumpBtn.on('pointerout', () => setInput('jump', false));
+
+    duckBtn.on('pointerdown', () => setInput('down', true));
+    duckBtn.on('pointerup', () => setInput('down', false));
+    duckBtn.on('pointerout', () => setInput('down', false));
   }
 
   setHearts(current: number) {
-    this.heartImages.forEach((img, i) => {
-      img.setTexture(i < current ? 'heart-full' : 'heart-empty');
+    this.heartIcons.forEach((img, i) => {
+      img.setAlpha(i < current ? 1 : 0.3);
     });
   }
 
@@ -74,17 +90,4 @@ export class HUD extends Scene {
     });
   }
 
-  private createIconBtn(x: number, y: number, icon: string, _label: string, cb: () => void) {
-    const bg = this.add.graphics();
-    bg.fillStyle(0xc8832a, 0.9);
-    bg.fillCircle(x, y, 20);
-    bg.lineStyle(2, 0x8b4513, 1);
-    bg.strokeCircle(x, y, 20);
-    const txt = this.add.text(x, y + 2, icon, { fontSize: '16px' }).setOrigin(0.5);
-    const zone = this.add.zone(x, y, 40, 40).setInteractive({ cursor: 'pointer' });
-    zone.on('pointerover', () => bg.setAlpha(0.6));
-    zone.on('pointerout', () => bg.setAlpha(1));
-    zone.on('pointerup', cb);
-    return txt;
-  }
 }

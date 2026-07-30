@@ -6,19 +6,32 @@ export const LoadingScreen: React.FC<{ onComplete: () => void }> = ({ onComplete
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // Simulate asset loading
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setTimeout(onComplete, 500); // Small delay before switching
-          return 100;
-        }
-        // Random progress increments for realism
-        return prev + Math.random() * 15;
-      });
-    }, 200);
-    return () => clearInterval(interval);
+    const assetsToLoad = [
+      'assets/jim.png',
+      'assets/pam.png',
+      'assets/jlp.ldtk'
+    ];
+    let loaded = 0;
+    const total = assetsToLoad.length;
+
+    const onLoadAsset = () => {
+      loaded++;
+      setProgress(Math.min((loaded / total) * 100, 100));
+      if (loaded === total) {
+        setTimeout(onComplete, 500);
+      }
+    };
+
+    assetsToLoad.forEach(src => {
+      if (src.endsWith('.json') || src.endsWith('.ldtk')) {
+        fetch(src).then(onLoadAsset).catch(onLoadAsset);
+      } else {
+        const img = new Image();
+        img.onload = onLoadAsset;
+        img.onerror = onLoadAsset;
+        img.src = src;
+      }
+    });
   }, [onComplete]);
 
   return (

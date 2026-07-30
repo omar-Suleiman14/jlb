@@ -1,5 +1,5 @@
 import { Room, Client } from "colyseus";
-import { GameState, Player } from "./schema/GameState";
+import { GameState, Player, Heart } from "./schema/GameState";
 
 export class GameRoom extends Room<GameState> {
   maxClients = 2;
@@ -18,6 +18,14 @@ export class GameRoom extends Room<GameState> {
       }
     });
 
+    this.onMessage("collect_heart", (client, heartId: string) => {
+      if (!this.state.hearts.has(heartId)) {
+        const h = new Heart();
+        h.collected = true;
+        this.state.hearts.set(heartId, h);
+      }
+    });
+
     // Host (first player = jim) sends this; server broadcasts countdown to all
     this.onMessage("start_game", (client, _data) => {
       const player = this.state.players.get(client.sessionId);
@@ -30,8 +38,12 @@ export class GameRoom extends Room<GameState> {
   onJoin(client: Client, options: any) {
     console.log(client.sessionId, "joined!");
     const player = new Player();
-    // Assign first player as jim, second as mary
-    player.character = this.state.players.size === 0 ? "jim" : "mary";
+    // Assign first player as jim, second as pam
+    let hasJim = false;
+    this.state.players.forEach((p) => {
+      if (p.character === "jim") hasJim = true;
+    });
+    player.character = hasJim ? "pam" : "jim";
     this.state.players.set(client.sessionId, player);
   }
 
